@@ -27,7 +27,7 @@ function App() {
               <div className="card-body p-5">
                 <Form setTasks={setTasks} />
                 {/* <Tabs /> */}
-                {isLoading ? <Loader /> : <Tasks tasks={tasks} />}
+                {isLoading ? <Loader /> : <Tasks tasks={tasks} setTasks={setTasks} />}
               </div>
             </div>
           </div>
@@ -57,7 +57,7 @@ function Form({ setTasks }) {
     const { data: newTask, error } = await supabase.from('tasks').insert([{text}]).select();
 
     // Update tasks
-    if (!error) setTasks(tasks => [newTask[0], ...tasks]);
+    if (!error) setTasks(tasks => [...tasks, newTask[0]]);
 
     // Clear form
     setText('');
@@ -102,7 +102,7 @@ function Form({ setTasks }) {
 //   );
 // }
 
-function Tasks({ tasks }) {
+function Tasks({ tasks, setTasks }) {
   return (
     <div className="tab-content" id="ex1-content">
         <div className="tab-pane fade show active" id="ex1-tabs-1" role="tabpanel"
@@ -110,7 +110,7 @@ function Tasks({ tasks }) {
             <ul className="list-group mb-0">
                 {
                   tasks.map(task => (
-                    <Task key={task.id} task={task} />
+                    <Task key={task.id} task={task} setTasks={setTasks} />
                   ))
                 }
             </ul>
@@ -119,14 +119,21 @@ function Tasks({ tasks }) {
   );
 }
 
-function Task({ task }) {
+function Task({ task, setTasks }) {
+  async function deleteTask() {
+    const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+
+    if (!error) setTasks(tasks => tasks.filter(t => t.id !== task.id));
+  }
+
   return (
     <li className="list-group-item d-flex justify-content-between align-items-center border-0 mb-2 rounded">
         <div>
           <input className="form-check-input me-2" type="checkbox" value="" aria-label="..." />
           {task.text}
         </div>
-        {/* <button className="delete-task">❌</button> */}
+
+        <button className="delete-task" onClick={deleteTask}>❌</button>
     </li>
   );
 }
